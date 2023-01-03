@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root version="3.0">
+  <announcement>
+    <text>Timer v1.1</text>
+    <font>emotefont</font>
+    <icon>Mattekure_Logo</icon>
+  </announcement>
+  <properties>
+    <name>Timer</name>
+    <version>1</version>
+    <author>mattekure</author>
+  </properties>
+  <base>
+    <includefile source="timerwindow.xml" />
+    <script name="TimerManager" file="TimerManager.lua" />
+    <includefile source="strings.xml" />
+    <icon name="icon_timer" file="sands-of-time.png" />
+    <icon name="Mattekure_Logo" file="Mattekure_Logo.png" />
+    <includefile source="strings_Timer.xml" />
+  </base>
+</root>

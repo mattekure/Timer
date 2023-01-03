@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root>
+  <windowclass name="timerwindow">
+    <frame>fielddark</frame>
+    <placement>
+      <size height="150" width="200" />
+    </placement>
+    <nodelete />
+    <script>
+function onInit()
+	TimerManager.registerTimerAction(label_timer.updateTimerLabel, 1)
+end
+
+function onClose()
+	TimerManager.unregisterTimerAction(label_timer.updateTimerLabel, 1)
+end
+
+</script>
+    <sheetdata>
+      <windowtitlebar name="title">
+        <resource>Window_timerwindow_Title</resource>
+      </windowtitlebar>
+      <close name="close">
+        <bounds>-30,10,20,20</bounds>
+      </close>
+      <buttoncontrol name="button_start">
+        <frame>
+          <name>buttonup</name>
+        </frame>
+        <bounds>20,90,60,30</bounds>
+        <textres>timerwindow_button_start_ButtonCaption</textres>
+        <stateframe>
+          <pressed name="buttonup" offset="-1,-1,-1,-1" nobaseframe="true" />
+        </stateframe>
+        <font>button-white</font>
+        <script>
+
+function onButtonPress()
+	TimerManager.startTimer()
+end
+
+</script>
+      </buttoncontrol>
+      <buttoncontrol name="button_stop">
+        <frame>
+          <name>buttonup</name>
+        </frame>
+        <bounds>120,90,60,30</bounds>
+        <textres>timerwindow_button_stop_ButtonCaption</textres>
+        <stateframe>
+          <pressed name="buttonup" offset="-1,-1,-1,-1" nobaseframe="true" />
+        </stateframe>
+        <font>button-white</font>
+        <script>
+
+function onButtonPress()
+	TimerManager.stopTimer()
+	window.label_timer.setValue("00:00:00")
+end
+
+</script>
+      </buttoncontrol>
+      <stringcontrol name="label_timer">
+        <bounds>10,65,180,20</bounds>
+        <center />
+        <static textres="timerwindow_label_timer_LabelCaption" />
+        <font>reference-b-large</font>
+        <script>
+function updateTimerLabel(nTime)
+	local nHours = math.floor(nTime/3600)
+	local nLeft = math.floor(nTime%3600)
+	local nMins = math.floor(nLeft/60)
+	local nSecs = math.floor(nTime%60)
+	if nHours &gt;= 0 and nHours &lt;= 9 then
+		nHours = "0"..nHours
+	end
+	if nMins &gt;= 0 and nMins &lt;= 9 then
+		nMins = "0"..nMins
+	end
+	if nSecs &gt;= 0 and nSecs &lt;= 9 then
+		nSecs = "0"..nSecs
+	end
+	if setValue then
+		setValue( nHours..":"..nMins..":"..nSecs )
+	end
+end
+
+
+</script>
+        <readonly />
+      </stringcontrol>
+    </sheetdata>
+  </windowclass>
+</root>

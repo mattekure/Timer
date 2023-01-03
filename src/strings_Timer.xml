@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root>
+  <string name="Window_timerwindow_Title">Timer</string>
+  <string name="timerwindow_button_start_ButtonCaption">Start</string>
+  <string name="timerwindow_button_stop_ButtonCaption">Stop</string>
+  <string name="timerwindow_label_timer_LabelCaption">00:00:00</string>
+</root>
