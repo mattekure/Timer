@@ -48,7 +48,7 @@ end
 
 function startTimer()
     timerRunning = true
-    Interface.openURL("http://0.0.0.0/", startTimerLoop)
+    Interface.openURL("https://mattekure.com/Timer/", startTimerLoop)
 end
 
 function startTimerLoop(url, response)
@@ -71,7 +71,7 @@ function loopTimer(url, response)
                 end
             end
         end
-        Interface.openURL("http://0.0.0.0", loopTimer)
+        Interface.openURL("https://mattekure.com/Timer/", loopTimer)
     end
 end
 
