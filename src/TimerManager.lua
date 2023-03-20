@@ -9,7 +9,6 @@ function onTabletopInit()
     if Session.IsHost then
         Comm.registerSlashHandler("timer", slashTimer, "[start|stop]")
 
-        --ChatManager.registerSlashCommand("timer", slashTimer, "[start|stop]")
         local tButton = {
             sIcon = "icon_timer",
             tooltipres = "sidebar_tooltip_timer",
@@ -49,7 +48,6 @@ end
 
 function startTimer()
     timerRunning = true
-    -- Interface.openURL("https://worldtimeapi.org/api/timezone/Etc/UTC", startTimerLoop)
     Interface.openURL("http://0.0.0.0/", startTimerLoop)
 end
 
