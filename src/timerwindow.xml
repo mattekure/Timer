@@ -8,7 +8,7 @@
     <nodelete />
     <script>
 function onInit()
-	TimerManager.registerTimerAction(label_timer.updateTimerLabel, 1)
+        TimerManager.registerTimerAction(label_timer.updateTimerLabel, 1 )
 end
 
 function onClose()

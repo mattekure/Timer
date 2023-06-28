@@ -18,8 +18,14 @@ function onTabletopInit()
     end
 end
 
-function registerTimerAction(fn, delay)
-    table.insert(tActions, { fn, delay })
+-------------------------------
+--Register a timer action with parameters
+--fn This is the action that will be called
+--delay this is the number of seconds betwen firing.  if you want it to fire every second, put 1.  cannot be 0.  if you want to fire every 3 seconds, put 3.
+--tParams this is an optional table of parameters you wish to pass to the fn when it fires.
+-------------------------------
+function registerTimerAction(fn, delay, tParams)
+    table.insert(tActions, { fn, delay, tParams })
 end
 
 function unregisterTimerAction(fn, delay)
@@ -66,7 +72,11 @@ function loopTimer(url, response)
             for _, v in ipairs(tActions) do
                 if nTimerSeconds % v[2] == 0 then
                     if v[1] then
-                        v[1](nTimerSeconds)
+                        if v[3] then
+                            v[1](nTimerSeconds, v[3])
+                        else
+                            v[1](nTimerSeconds)
+                        end
                     end
                 end
             end
