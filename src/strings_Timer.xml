@@ -7,6 +7,7 @@
   <string name="option_header_TIMER">Timer (GM)</string>
   <string name="option_label_HIDE_NON_FRIENDLY">Chat: Hide Non-Friendly</string>
   <string name="option_label_OUTPUT_TO_CHAT">Chat: Output Time</string>
+  <string name="option_label_RESET_ON_TURN">CT: Reset Timer On Turn</string>
   <string name="option_label_TIMER_URL">CT: Timer URL</string>
   <string name="option_val_default_TIMER">Default URL</string>
   <string name="option_val_localhost_TIMER">Localhost URL</string>

@@ -9,6 +9,7 @@ LOCALHOST_TIMER_URL = "http://localhost:1803"
 OFF = "off"
 ON = "on"
 OUTPUT_TO_CHAT = "OUTPUT_TO_CHAT"
+RESET_ON_TURN = "RESET_ON_TURN"
 TIMER_URL = "TIMER_URL"
 
 local tActions = {}
@@ -18,6 +19,8 @@ function onTabletopInit()
         local option_entry_cycler = "option_entry_cycler"
         local option_header = "option_header_TIMER"
         local option_val_off = "option_val_off"
+        OptionsManager.registerOption2(RESET_ON_TURN, false, option_header, "option_label_RESET_ON_TURN", option_entry_cycler,
+            { labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
         OptionsManager.registerOption2(TIMER_URL, false, option_header, "option_label_TIMER_URL", option_entry_cycler,
             { baselabel = "option_val_default_TIMER", baseval = DEFAULT_TIMER_URL, labels = "option_val_localhost_TIMER", values = LOCALHOST_TIMER_URL, default = DEFAULT_TIMER_URL })
         OptionsManager.registerOption2(OUTPUT_TO_CHAT, false, option_header, "option_label_OUTPUT_TO_CHAT", option_entry_cycler,
@@ -83,6 +86,10 @@ end
 
 function checkHideNonFriendlyOption()
     return OptionsManager.isOption(HIDE_NON_FRIENDLY, ON)
+end
+
+function checkResetOnTurnOption()
+    return OptionsManager.isOption(RESET_ON_TURN, ON)
 end
 
 function getTimerUrl()
@@ -153,7 +160,7 @@ function outputTime(nTime)
     if nSecs >= 0 and nSecs <= 9 then
         nSecs = "0" .. nSecs
     end
-    local nodeActiveCT = nodeCurrentActor
+    local nodeActiveCT = _nodeCurrentActor
     if not nodeActiveCT then
         nodeActiveCT = CombatManager.getActiveCT()
     end
@@ -167,34 +174,38 @@ function outputTime(nTime)
 end
 
 function outputTimeIfConfigured()
-    if timerRunning and checkOutputToChatOption() then
+    if checkResetOnTurnOption()
+        and timerRunning
+        and checkOutputToChatOption() then
         outputTime(nTimerSeconds)
     end
 end
 
 function requestActivation(nodeEntry, bSkipBell)
     outputTimeIfConfigured()
-	resetTimerWindow(true)
+	resetTimerWindowAndOptionallyRestart(true)
 	CombatManager_requestActivation(nodeEntry, bSkipBell)
-    nodeCurrentActor = nodeEntry -- store current actor so we have it on combat reset which fires after current is cleared
+    _nodeCurrentActor = nodeEntry -- store current actor so we have it on combat reset which fires after current is cleared
 end
 
 function onCombatResetEvent()
     outputTimeIfConfigured()
-	resetTimerWindow(false)
+	resetTimerWindowAndOptionallyRestart(false)
 end
 
-function resetTimerWindow(bStartTimer)
-    if timerRunning or TimerManager.resetTimer then -- resetTimer present when timewindow showing
-        TimerManager.stopTimer()
-        if TimerManager.resetTimer then
-            TimerManager.resetTimer()
+function resetTimerWindowAndOptionallyRestart(bStartTimer)
+    if checkResetOnTurnOption() then
+        if timerRunning or TimerManager.resetTimer then -- resetTimer present when timewindow showing
+            TimerManager.stopTimer()
+            if TimerManager.resetTimer then
+                TimerManager.resetTimer()
+            end
+
+            TimerManager.nTimerStartTime = TimerManager.nCurrentTime
         end
 
-        TimerManager.nTimerStartTime = TimerManager.nCurrentTime
-    end
-
-    if bStartTimer then
-        TimerManager.startTimer()
+        if bStartTimer then
+            TimerManager.startTimer()
+        end
     end
 end
