@@ -14,21 +14,18 @@ TIMER_URL = "TIMER_URL"
 local tActions = {}
 
 function onTabletopInit()
-    local option_entry_cycler = "option_entry_cycler"
-    local option_header = "option_header_TIMER"
-	local option_val_default = "option_val_default_TIMER"
-	local option_val_localhost = "option_val_localhost_TIMER"
-	local option_val_off = "option_val_off"
-	OptionsManager.registerOption2(TIMER_URL, false, option_header, "option_label_TIMER_URL", option_entry_cycler,
-		{ baselabel = option_val_default, baseval = DEFAULT_TIMER_URL, labels = option_val_localhost, values = LOCALHOST_TIMER_URL, default = DEFAULT_TIMER_URL })
-    OptionsManager.registerOption2(OUTPUT_TO_CHAT, false, option_header, "option_label_OUTPUT_TO_CHAT", option_entry_cycler,
-		{ labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
-    OptionsManager.registerOption2(HIDE_NON_FRIENDLY, false, option_header, "option_label_HIDE_NON_FRIENDLY", option_entry_cycler,
-		{ labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
-
     if Session.IsHost then
-        Comm.registerSlashHandler("timer", slashTimer, "[start|stop]")
+        local option_entry_cycler = "option_entry_cycler"
+        local option_header = "option_header_TIMER"
+        local option_val_off = "option_val_off"
+        OptionsManager.registerOption2(TIMER_URL, false, option_header, "option_label_TIMER_URL", option_entry_cycler,
+            { baselabel = "option_val_default_TIMER", baseval = DEFAULT_TIMER_URL, labels = "option_val_localhost_TIMER", values = LOCALHOST_TIMER_URL, default = DEFAULT_TIMER_URL })
+        OptionsManager.registerOption2(OUTPUT_TO_CHAT, false, option_header, "option_label_OUTPUT_TO_CHAT", option_entry_cycler,
+            { labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
+        OptionsManager.registerOption2(HIDE_NON_FRIENDLY, false, option_header, "option_label_HIDE_NON_FRIENDLY", option_entry_cycler,
+            { labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
 
+        Comm.registerSlashHandler("timer", slashTimer, "[start|stop]")
         local tButton = {
             sIcon = "icon_timer",
             tooltipres = "sidebar_tooltip_timer",
