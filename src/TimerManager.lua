@@ -156,7 +156,10 @@ function outputTime(nTime)
     if nSecs >= 0 and nSecs <= 9 then
         nSecs = "0" .. nSecs
     end
-    local nodeActiveCT = CombatManager.getActiveCT()
+    local nodeActiveCT = nodeCurrentActor
+    if not nodeActiveCT then
+        nodeActiveCT = CombatManager.getActiveCT()
+    end
     local msg = {
         secret = checkHideNonFriendlyOption() and not isFriend(nodeActiveCT),
         icon = "Mattekure_Logo"
@@ -166,16 +169,21 @@ function outputTime(nTime)
     Comm.deliverChatMessage(msg)
 end
 
-function requestActivation(nodeEntry, bSkipBell)
+function outputTimeIfConfigured()
     if checkOutputToChatOption() then
         outputTime(nTimerSeconds)
     end
+end
 
+function requestActivation(nodeEntry, bSkipBell)
+    outputTimeIfConfigured()
 	resetTimerWindow(true)
 	CombatManager_requestActivation(nodeEntry, bSkipBell)
+    nodeCurrentActor = nodeEntry -- store current actor so we have it on combat reset which fires after current is cleared
 end
 
 function onCombatResetEvent()
+    outputTimeIfConfigured()
 	resetTimerWindow(false)
 	TimerManager.stopTimer()
 end
