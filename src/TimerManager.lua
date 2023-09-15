@@ -158,7 +158,8 @@ function outputTime(nTime)
     end
     local nodeActiveCT = CombatManager.getActiveCT()
     local msg = {
-        secret = checkHideNonFriendlyOption() and not isFriend(nodeActiveCT)
+        secret = checkHideNonFriendlyOption() and not isFriend(nodeActiveCT),
+        icon = "Mattekure_Logo"
     }
     msg.text = "Actor: " .. getCurrentActorDisplayNameOrHidden(nodeActiveCT)
           .. "\rTime (hh:mm:ss): " .. nHours .. ":" .. nMins .. ":" .. nSecs
