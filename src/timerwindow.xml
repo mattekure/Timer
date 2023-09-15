@@ -63,7 +63,7 @@ end
 
 function onButtonPress()
 	TimerManager.stopTimer()
-	window.label_timer.setValue("00:00:00")
+    window.label_timer.setValue("00:00:00")
 end
 
 </script>
@@ -74,6 +74,12 @@ end
         <static textres="timerwindow_label_timer_LabelCaption" />
         <font>reference-b-large</font>
         <script>
+function onInit()
+    if TimerManager.timerRunning then
+	    updateTimerLabel(TimerManager.nTimerSeconds)
+    end
+end
+
 function updateTimerLabel(nTime)
 	local nHours = math.floor(nTime/3600)
 	local nLeft = math.floor(nTime%3600)

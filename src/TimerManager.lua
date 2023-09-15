@@ -195,8 +195,9 @@ function resetTimerWindow(bStartTimer)
         end
 
         TimerManager.nTimerStartTime = TimerManager.nCurrentTime
-        if bStartTimer then
-            TimerManager.startTimer()
-        end
+    end
+
+    if bStartTimer then
+        TimerManager.startTimer()
     end
 end
