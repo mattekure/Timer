@@ -169,7 +169,7 @@ function outputTime(nTime)
         icon = "Mattekure_Logo"
     }
     msg.text = "Actor: " .. getCurrentActorDisplayNameOrHidden(nodeActiveCT)
-          .. "\rTime (hh:mm:ss): " .. nHours .. ":" .. nMins .. ":" .. nSecs
+          .. "\nTime: " .. nHours .. "h:" .. nMins .. "m:" .. nSecs .. "s"
     Comm.deliverChatMessage(msg)
 end
 
