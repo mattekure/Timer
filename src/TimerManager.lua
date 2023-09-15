@@ -4,7 +4,11 @@ nTimerStartTime = 0;
 nTimerSeconds = 0;
 
 DEFAULT_TIMER_URL = "https://mattekure.com/Timer/"
+HIDE_NON_FRIENDLY = "HIDE_NON_FRIENDLY"
 LOCALHOST_TIMER_URL = "http://localhost:1803"
+OFF = "off"
+ON = "on"
+OUTPUT_TO_CHAT = "OUTPUT_TO_CHAT"
 TIMER_URL = "TIMER_URL"
 
 local tActions = {}
@@ -14,8 +18,13 @@ function onTabletopInit()
     local option_header = "option_header_TIMER"
 	local option_val_default = "option_val_default_TIMER"
 	local option_val_localhost = "option_val_localhost_TIMER"
+	local option_val_off = "option_val_off"
 	OptionsManager.registerOption2(TIMER_URL, false, option_header, "option_label_TIMER_URL", option_entry_cycler,
 		{ baselabel = option_val_default, baseval = DEFAULT_TIMER_URL, labels = option_val_localhost, values = LOCALHOST_TIMER_URL, default = DEFAULT_TIMER_URL })
+    OptionsManager.registerOption2(OUTPUT_TO_CHAT, false, option_header, "option_label_OUTPUT_TO_CHAT", option_entry_cycler,
+		{ labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
+    OptionsManager.registerOption2(HIDE_NON_FRIENDLY, false, option_header, "option_label_HIDE_NON_FRIENDLY", option_entry_cycler,
+		{ labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
 
     if Session.IsHost then
         Comm.registerSlashHandler("timer", slashTimer, "[start|stop]")
@@ -51,7 +60,7 @@ function unregisterTimerAction(fn, delay)
     end
 end
 
-function slashTimer(sCommand, sParams)
+function slashTimer(_, sParams)
     if sParams == "start" then
         startTimer()
     elseif sParams == "stop" then
@@ -71,6 +80,14 @@ function checkUrlOptionDefault()
     return OptionsManager.isOption(TIMER_URL, DEFAULT_TIMER_URL)
 end
 
+function checkOutputToChatOption()
+    return OptionsManager.isOption(OUTPUT_TO_CHAT, ON)
+end
+
+function checkHideNonFriendlyOption()
+    return OptionsManager.isOption(HIDE_NON_FRIENDLY, ON)
+end
+
 function getTimerUrl()
     if checkUrlOptionDefault() then
         return DEFAULT_TIMER_URL
@@ -84,13 +101,13 @@ function startTimer()
     Interface.openURL(getTimerUrl(), startTimerLoop)
 end
 
-function startTimerLoop(url, response)
+function startTimerLoop()
     nTimerStartTime = os.time();
     nCurrentTime = nTimerStartTime;
     loopTimer()
 end
 
-function loopTimer(url, response)
+function loopTimer()
     if timerRunning then
         nCurrentTime = os.time();
         local nDiff = nCurrentTime - nTimerStartTime;
@@ -112,6 +129,19 @@ function loopTimer(url, response)
     end
 end
 
+function getCurrentActorDisplayNameOrHidden(nodeCT)
+    local sDisplayName = ActorManager.getDisplayName(nodeCT)
+    if not sDisplayName or sDisplayName == "" then
+        sDisplayName = "(unidentified creature)"
+    end
+
+    return sDisplayName
+end
+
+function isFriend(vActor)
+	return vActor and ActorManager.getFaction(vActor) == "friend"
+end
+
 function outputTime(nTime)
     local nHours = math.floor(nTime / 3600)
     local nLeft = math.floor(nTime % 3600)
@@ -126,12 +156,20 @@ function outputTime(nTime)
     if nSecs >= 0 and nSecs <= 9 then
         nSecs = "0" .. nSecs
     end
-    local msg = {}
-    msg.text = nHours .. ":" .. nMins .. ":" .. nSecs
+    local nodeActiveCT = CombatManager.getActiveCT()
+    local msg = {
+        secret = checkHideNonFriendlyOption() and not isFriend(nodeActiveCT)
+    }
+    msg.text = "Actor: " .. getCurrentActorDisplayNameOrHidden(nodeActiveCT)
+          .. "\rTime (hh:mm:ss): " .. nHours .. ":" .. nMins .. ":" .. nSecs
     Comm.deliverChatMessage(msg)
 end
 
 function requestActivation(nodeEntry, bSkipBell)
+    if checkOutputToChatOption() then
+        outputTime(nTimerSeconds)
+    end
+
 	resetTimerWindow(true)
 	CombatManager_requestActivation(nodeEntry, bSkipBell)
 end
