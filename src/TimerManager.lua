@@ -1,7 +1,7 @@
-timerRunning = false
-nCurrentTime = 0
-nTimerStartTime = 0;
-nTimerSeconds = 0;
+local timerRunning = false
+local nCurrentTime = 0
+local nTimerStartTime = 0;
+local nTimerSeconds = 0;
 
 DEFAULT_TIMER_URL = "https://mattekure.com/Timer/"
 HIDE_NON_FRIENDLY = "HIDE_NON_FRIENDLY"
