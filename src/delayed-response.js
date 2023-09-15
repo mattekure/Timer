@@ -1,6 +1,6 @@
 const http = require('http');
 const PORT = 1803;
-const delayMs = 500;
+const delayMs = 800;
 
 const server = http.createServer((req, res) => {
   setTimeout(() => {
