@@ -1,11 +1,22 @@
-local timerRunning = false
-local nCurrentTime = 0
-local nTimerStartTime = 0;
-local nTimerSeconds = 0;
+timerRunning = false
+nCurrentTime = 0
+nTimerStartTime = 0;
+nTimerSeconds = 0;
+
+DEFAULT_TIMER_URL = "https://mattekure.com/Timer/"
+LOCALHOST_TIMER_URL = "http://localhost:1803"
+TIMER_URL = "TIMER_URL"
 
 local tActions = {}
 
 function onTabletopInit()
+    local option_entry_cycler = "option_entry_cycler"
+    local option_header = "option_header_TIMER"
+	local option_val_default = "option_val_default_TIMER"
+	local option_val_localhost = "option_val_localhost_TIMER"
+	OptionsManager.registerOption2(TIMER_URL, false, option_header, "option_label_TIMER_URL", option_entry_cycler,
+		{ baselabel = option_val_default, baseval = DEFAULT_TIMER_URL, labels = option_val_localhost, values = LOCALHOST_TIMER_URL, default = DEFAULT_TIMER_URL })
+
     if Session.IsHost then
         Comm.registerSlashHandler("timer", slashTimer, "[start|stop]")
 
@@ -15,6 +26,10 @@ function onTabletopInit()
             class = "timerwindow",
         }
         DesktopManager.registerSidebarToolButton(tButton, false);
+
+		CombatManager.setCustomCombatReset(onCombatResetEvent)
+        CombatManager_requestActivation = CombatManager.requestActivation
+        CombatManager.requestActivation = requestActivation
     end
 end
 
@@ -52,9 +67,21 @@ function stopTimer()
     timerRunning = false
 end
 
+function checkUrlOptionDefault()
+    return OptionsManager.isOption(TIMER_URL, DEFAULT_TIMER_URL)
+end
+
+function getTimerUrl()
+    if checkUrlOptionDefault() then
+        return DEFAULT_TIMER_URL
+    else
+        return LOCALHOST_TIMER_URL
+    end
+end
+
 function startTimer()
     timerRunning = true
-    Interface.openURL("https://mattekure.com/Timer/", startTimerLoop)
+    Interface.openURL(getTimerUrl(), startTimerLoop)
 end
 
 function startTimerLoop(url, response)
@@ -81,7 +108,7 @@ function loopTimer(url, response)
                 end
             end
         end
-        Interface.openURL("https://mattekure.com/Timer/", loopTimer)
+        Interface.openURL(getTimerUrl(), loopTimer)
     end
 end
 
@@ -102,4 +129,24 @@ function outputTime(nTime)
     local msg = {}
     msg.text = nHours .. ":" .. nMins .. ":" .. nSecs
     Comm.deliverChatMessage(msg)
+end
+
+function requestActivation(nodeEntry, bSkipBell)
+	resetTimerWindow(true)
+	CombatManager_requestActivation(nodeEntry, bSkipBell)
+end
+
+function onCombatResetEvent()
+	resetTimerWindow(false)
+	TimerManager.stopTimer()
+end
+
+function resetTimerWindow(bStartTimer)
+	if TimerManager.resetTimer then
+		TimerManager.resetTimer()
+		TimerManager.nTimerStartTime = TimerManager.nCurrentTime
+        if bStartTimer then
+		    TimerManager.startTimer()
+        end
+	end
 end

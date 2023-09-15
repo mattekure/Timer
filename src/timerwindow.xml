@@ -8,7 +8,7 @@
     <nodelete />
     <script>
 function onInit()
-        TimerManager.registerTimerAction(label_timer.updateTimerLabel, 1 )
+	TimerManager.registerTimerAction(label_timer.updateTimerLabel, 1)
 end
 
 function onClose()
@@ -52,6 +52,14 @@ end
         </stateframe>
         <font>button-white</font>
         <script>
+		
+function onInit()
+	TimerManager.resetTimer = onButtonPress
+end
+
+function onClose()
+	TimerManager.resetTimer = nil
+end
 
 function onButtonPress()
 	TimerManager.stopTimer()
