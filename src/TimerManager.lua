@@ -170,7 +170,7 @@ function outputTime(nTime)
 end
 
 function outputTimeIfConfigured()
-    if checkOutputToChatOption() then
+    if timerRunning and checkOutputToChatOption() then
         outputTime(nTimerSeconds)
     end
 end
@@ -185,15 +185,18 @@ end
 function onCombatResetEvent()
     outputTimeIfConfigured()
 	resetTimerWindow(false)
-	TimerManager.stopTimer()
 end
 
 function resetTimerWindow(bStartTimer)
-	if TimerManager.resetTimer then
-		TimerManager.resetTimer()
-		TimerManager.nTimerStartTime = TimerManager.nCurrentTime
-        if bStartTimer then
-		    TimerManager.startTimer()
+    if timerRunning or TimerManager.resetTimer then -- resetTimer present when timewindow showing
+        TimerManager.stopTimer()
+        if TimerManager.resetTimer then
+            TimerManager.resetTimer()
         end
-	end
+
+        TimerManager.nTimerStartTime = TimerManager.nCurrentTime
+        if bStartTimer then
+            TimerManager.startTimer()
+        end
+    end
 end
