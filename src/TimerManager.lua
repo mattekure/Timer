@@ -34,7 +34,7 @@ function onTabletopInit()
             tooltipres = "sidebar_tooltip_timer",
             class = "timerwindow",
         }
-        DesktopManager.registerSidebarToolButton(tButton, false);
+        DesktopManager.registerSidebarToolButton(tButton)
 
 		CombatManager.setCustomCombatReset(onCombatResetEvent)
         CombatManager_requestActivation = CombatManager.requestActivation
@@ -118,17 +118,14 @@ function loopTimer()
         if nDiff ~= nTimerSeconds then
             nTimerSeconds = nDiff;
             for _, v in ipairs(tActions) do
-                if nTimerSeconds % v[2] == 0 then
-                    if v[1] then
-                        if v[3] then
-                            v[1](nTimerSeconds, v[3])
-                        else
-                            v[1](nTimerSeconds)
-                        end
+                if nTimerSeconds % v[2] == 0 then -- Check delay
+                    if v[1] then -- fn exists
+                        v[1](nTimerSeconds, v[3])  -- Idx 3 is parameters.  None will work anyway (nil).
                     end
                 end
             end
         end
+
         Interface.openURL(getTimerUrl(), loopTimer)
     end
 end
