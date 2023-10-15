@@ -1,8 +1,12 @@
-timerRunning = false
+-- Extension global access
 nCurrentTime = 0
-nTimerStartTime = 0
+nLastTimerSeconds = 0
 nTimerSeconds = 0
+nTimerStartTime = 0
+tActions = {}
+timerRunning = false
 
+-- Constants
 DEFAULT_TIMER_URL = "https://mattekure.com/Timer/"
 HIDE_NON_FRIENDLY = "HIDE_NON_FRIENDLY"
 LOCALHOST_TIMER_URL = "http://localhost:1803"
@@ -11,8 +15,6 @@ ON = "on"
 OUTPUT_TO_CHAT = "OUTPUT_TO_CHAT"
 RESET_ON_TURN = "RESET_ON_TURN"
 TIMER_URL = "TIMER_URL"
-
-local tActions = {}
 
 function onTabletopInit()
     if Session.IsHost then
@@ -74,6 +76,8 @@ end
 
 function stopTimer()
     timerRunning = false
+    nTimerSeconds = 0
+    nLastTimerSeconds = 0
 end
 
 function checkUrlOptionDefault()
@@ -106,17 +110,17 @@ function startTimer()
 end
 
 function startTimerLoop()
-    nTimerStartTime = os.time();
-    nCurrentTime = nTimerStartTime;
+    nTimerStartTime = os.time()
+    nCurrentTime = nTimerStartTime
     loopTimer()
 end
 
 function loopTimer()
     if timerRunning then
-        nCurrentTime = os.time();
-        local nDiff = nCurrentTime - nTimerStartTime;
+        nCurrentTime = os.time()
+        local nDiff = nCurrentTime - nTimerStartTime
         if nDiff ~= nTimerSeconds then
-            nTimerSeconds = nDiff;
+            nTimerSeconds = nDiff
             for _, v in ipairs(tActions) do
                 if nTimerSeconds % v[2] == 0 then -- Check delay
                     if v[1] then -- fn exists
@@ -172,13 +176,14 @@ end
 
 function outputTimeIfConfigured()
     if timerRunning and checkOutputToChatOption() then
-        outputTime(nTimerSeconds)
+        outputTime(nTimerSeconds - nLastTimerSeconds)
     end
 end
 
 function requestActivation(nodeEntry, bSkipBell)
     outputTimeIfConfigured()
-	resetTimerWindowAndOptionallyRestart(true)
+    local bStartTimerOnTurnStart = checkResetOnTurnOption() or checkOutputToChatOption()
+	resetTimerWindowAndOptionallyRestart(bStartTimerOnTurnStart)
 	CombatManager_requestActivation(nodeEntry, bSkipBell)
     _nodeCurrentActor = nodeEntry -- store current actor so we have it on combat reset which fires after current is cleared
 end
@@ -191,16 +196,18 @@ end
 function resetTimerWindowAndOptionallyRestart(bStartTimer)
     if checkResetOnTurnOption() then
         if timerRunning or TimerManager.resetTimer then -- resetTimer present when timewindow showing
-            TimerManager.stopTimer()
             if TimerManager.resetTimer then
-                TimerManager.resetTimer()
+                TimerManager.resetTimer()  -- calls stopTimer()
+            else
+                stopTimer()
             end
 
-            TimerManager.nTimerStartTime = TimerManager.nCurrentTime
+            nTimerStartTime = nCurrentTime
         end
+    end
 
-        if bStartTimer then
-            TimerManager.startTimer()
-        end
+    nLastTimerSeconds = nTimerSeconds
+    if bStartTimer and not timerRunning then
+        startTimer()
     end
 end
