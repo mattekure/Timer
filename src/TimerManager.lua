@@ -171,9 +171,7 @@ function outputTime(nTime)
 end
 
 function outputTimeIfConfigured()
-    if checkResetOnTurnOption()
-        and timerRunning
-        and checkOutputToChatOption() then
+    if timerRunning and checkOutputToChatOption() then
         outputTime(nTimerSeconds)
     end
 end
