@@ -1,20 +1,46 @@
-local timerRunning = false
-local nCurrentTime = 0
-local nTimerStartTime = 0;
-local nTimerSeconds = 0;
+-- Extension global access
+nCurrentTime = 0
+nLastTimerSeconds = 0
+nTimerSeconds = 0
+nTimerStartTime = 0
+tActions = {}
+timerRunning = false
 
-local tActions = {}
+-- Constants
+DEFAULT_TIMER_URL = "https://mattekure.com/Timer/"
+HIDE_NON_FRIENDLY = "HIDE_NON_FRIENDLY"
+LOCALHOST_TIMER_URL = "http://localhost:1803"
+OFF = "off"
+ON = "on"
+OUTPUT_TO_CHAT = "OUTPUT_TO_CHAT"
+RESET_ON_TURN = "RESET_ON_TURN"
+TIMER_URL = "TIMER_URL"
 
 function onTabletopInit()
     if Session.IsHost then
-        Comm.registerSlashHandler("timer", slashTimer, "[start|stop]")
+        local option_entry_cycler = "option_entry_cycler"
+        local option_header = "option_header_TIMER"
+        local option_val_off = "option_val_off"
+        OptionsManager.registerOption2(RESET_ON_TURN, false, option_header, "option_label_RESET_ON_TURN", option_entry_cycler,
+            { labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
+        OptionsManager.registerOption2(TIMER_URL, false, option_header, "option_label_TIMER_URL", option_entry_cycler,
+            { baselabel = "option_val_default_TIMER", baseval = DEFAULT_TIMER_URL, labels = "option_val_localhost_TIMER", values = LOCALHOST_TIMER_URL, default = DEFAULT_TIMER_URL })
+        OptionsManager.registerOption2(OUTPUT_TO_CHAT, false, option_header, "option_label_OUTPUT_TO_CHAT", option_entry_cycler,
+            { labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
+        OptionsManager.registerOption2(HIDE_NON_FRIENDLY, false, option_header, "option_label_HIDE_NON_FRIENDLY", option_entry_cycler,
+            { labels = option_val_off, values = OFF, baselabel = "option_val_on", baseval = ON, default = ON })
 
+        Comm.registerSlashHandler("timer", slashTimer, "[start|stop]")
         local tButton = {
             sIcon = "icon_timer",
             tooltipres = "sidebar_tooltip_timer",
             class = "timerwindow",
         }
-        DesktopManager.registerSidebarToolButton(tButton, false);
+        DesktopManager.registerSidebarToolButton(tButton)
+
+		CombatManager.setCustomCombatReset(onCombatResetEvent)
+        CombatManager_requestActivation = CombatManager.requestActivation
+        CombatManager.requestActivation = requestActivation
     end
 end
 
@@ -36,7 +62,7 @@ function unregisterTimerAction(fn, delay)
     end
 end
 
-function slashTimer(sCommand, sParams)
+function slashTimer(_, sParams)
     if sParams == "start" then
         startTimer()
     elseif sParams == "stop" then
@@ -50,39 +76,75 @@ end
 
 function stopTimer()
     timerRunning = false
+    nTimerSeconds = 0
+    nLastTimerSeconds = 0
+end
+
+function checkUrlOptionDefault()
+    return OptionsManager.isOption(TIMER_URL, DEFAULT_TIMER_URL)
+end
+
+function checkOutputToChatOption()
+    return OptionsManager.isOption(OUTPUT_TO_CHAT, ON)
+end
+
+function checkHideNonFriendlyOption()
+    return OptionsManager.isOption(HIDE_NON_FRIENDLY, ON)
+end
+
+function checkResetOnTurnOption()
+    return OptionsManager.isOption(RESET_ON_TURN, ON)
+end
+
+function getTimerUrl()
+    if checkUrlOptionDefault() then
+        return DEFAULT_TIMER_URL
+    else
+        return LOCALHOST_TIMER_URL
+    end
 end
 
 function startTimer()
     timerRunning = true
-    Interface.openURL("https://mattekure.com/Timer/", startTimerLoop)
+    Interface.openURL(getTimerUrl(), startTimerLoop)
 end
 
-function startTimerLoop(url, response)
-    nTimerStartTime = os.time();
-    nCurrentTime = nTimerStartTime;
+function startTimerLoop()
+    nTimerStartTime = os.time()
+    nCurrentTime = nTimerStartTime
     loopTimer()
 end
 
-function loopTimer(url, response)
+function loopTimer()
     if timerRunning then
-        nCurrentTime = os.time();
-        local nDiff = nCurrentTime - nTimerStartTime;
+        nCurrentTime = os.time()
+        local nDiff = nCurrentTime - nTimerStartTime
         if nDiff ~= nTimerSeconds then
-            nTimerSeconds = nDiff;
+            nTimerSeconds = nDiff
             for _, v in ipairs(tActions) do
-                if nTimerSeconds % v[2] == 0 then
-                    if v[1] then
-                        if v[3] then
-                            v[1](nTimerSeconds, v[3])
-                        else
-                            v[1](nTimerSeconds)
-                        end
+                if nTimerSeconds % v[2] == 0 then -- Check delay
+                    if v[1] then -- fn exists
+                        v[1](nTimerSeconds, v[3])  -- Idx 3 is parameters.  None will work anyway (nil).
                     end
                 end
             end
         end
-        Interface.openURL("https://mattekure.com/Timer/", loopTimer)
+
+        Interface.openURL(getTimerUrl(), loopTimer)
     end
+end
+
+function getCurrentActorDisplayNameOrHidden(nodeCT)
+    local sDisplayName = ActorManager.getDisplayName(nodeCT)
+    if not sDisplayName or sDisplayName == "" then
+        sDisplayName = "(unidentified creature)"
+    end
+
+    return sDisplayName
+end
+
+function isFriend(vActor)
+	return vActor and ActorManager.getFaction(vActor) == "friend"
 end
 
 function outputTime(nTime)
@@ -99,7 +161,53 @@ function outputTime(nTime)
     if nSecs >= 0 and nSecs <= 9 then
         nSecs = "0" .. nSecs
     end
-    local msg = {}
-    msg.text = nHours .. ":" .. nMins .. ":" .. nSecs
+    local nodeActiveCT = _nodeCurrentActor
+    if not nodeActiveCT then
+        nodeActiveCT = CombatManager.getActiveCT()
+    end
+    local msg = {
+        secret = checkHideNonFriendlyOption() and not isFriend(nodeActiveCT),
+        icon = "Mattekure_Logo"
+    }
+    msg.text = "Actor: " .. getCurrentActorDisplayNameOrHidden(nodeActiveCT)
+          .. "\nTime: " .. nHours .. "h:" .. nMins .. "m:" .. nSecs .. "s"
     Comm.deliverChatMessage(msg)
+end
+
+function outputTimeIfConfigured()
+    if timerRunning and checkOutputToChatOption() then
+        outputTime(nTimerSeconds - nLastTimerSeconds)
+    end
+end
+
+function requestActivation(nodeEntry, bSkipBell)
+    outputTimeIfConfigured()
+    local bStartTimerOnTurnStart = checkResetOnTurnOption() or checkOutputToChatOption()
+	resetTimerWindowAndOptionallyRestart(bStartTimerOnTurnStart)
+	CombatManager_requestActivation(nodeEntry, bSkipBell)
+    _nodeCurrentActor = nodeEntry -- store current actor so we have it on combat reset which fires after current is cleared
+end
+
+function onCombatResetEvent()
+    outputTimeIfConfigured()
+	resetTimerWindowAndOptionallyRestart(false)
+end
+
+function resetTimerWindowAndOptionallyRestart(bStartTimer)
+    if checkResetOnTurnOption() then
+        if timerRunning or TimerManager.resetTimer then -- resetTimer present when timewindow showing
+            if TimerManager.resetTimer then
+                TimerManager.resetTimer()  -- calls stopTimer()
+            else
+                stopTimer()
+            end
+
+            nTimerStartTime = nCurrentTime
+        end
+    end
+
+    nLastTimerSeconds = nTimerSeconds
+    if bStartTimer and not timerRunning then
+        startTimer()
+    end
 end
